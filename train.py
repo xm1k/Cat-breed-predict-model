@@ -16,7 +16,7 @@ from collections import Counter
 train_ratio = 0.8
 
 batch_size = 32
-num_epochs = 20
+num_epochs = 15
 learning_rate = 0.001
 
 transform = transforms.Compose([
@@ -76,23 +76,24 @@ for epoch in range(num_epochs):
     print()
     print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {running_loss/ len(train_loader):.4f}, Accuracy: {accuracy_score(all_labels, all_predictions)}")
     scheduler.step()
-    model.eval()
 
-    with torch.no_grad():
-        for images, labels in test_loader:
-            images, labels = images.to(device), labels.to(device)
-            outputs = model(images)
-            _, predicted = torch.max(outputs, 1)
+model.eval()
 
-            for label, pred in zip(labels, predicted):
-                if label == pred:
-                    class_correct[label.item()] += 1
-                else:
-                    errors_by_class[label.item()] += 1
-                class_total[label.item()] += 1
+with torch.no_grad():
+    for images, labels in test_loader:
+        images, labels = images.to(device), labels.to(device)
+        outputs = model(images)
+        _, predicted = torch.max(outputs, 1)
 
-    sorted_errors = sorted(errors_by_class.items(), key=lambda x: x[1], reverse=True)
-    print("Accuracy is {:.2f}%".format(100 * sum(class_correct.values()) / sum(class_total.values())))
+        for label, pred in zip(labels, predicted):
+            if label == pred:
+                class_correct[label.item()] += 1
+            else:
+                errors_by_class[label.item()] += 1
+            class_total[label.item()] += 1
+
+sorted_errors = sorted(errors_by_class.items(), key=lambda x: x[1], reverse=True)
+print("Accuracy is {:.2f}%".format(100 * sum(class_correct.values()) / sum(class_total.values())))
 
 print("Classes sorted by most errors:")
 for class_idx, num_errors in sorted_errors:
